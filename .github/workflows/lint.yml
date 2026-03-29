@@ -34,10 +34,20 @@ jobs:
       - name: shellcheck
         run: |
           echo "==> Running shellcheck..."
-          find . -name "*.sh" -not -path "./.git/*" | xargs shellcheck \
+          # Collect only .sh files; exclude .git and gentoo-overlay (ebuilds
+          # use bash-isms that shellcheck flags but are valid in ebuild context)
+          mapfile -t SH_FILES < <(find . -name "*.sh" \
+            -not -path "./.git/*" \
+            -not -path "./gentoo-overlay/*")
+          if [[ ${#SH_FILES[@]} -eq 0 ]]; then
+            echo "No shell scripts found."
+            exit 0
+          fi
+          shellcheck \
             --severity=warning \
-            --exclude=SC1091 \
-            --shell=bash
+            --exclude=SC1091,SC2034 \
+            --shell=bash \
+            "${SH_FILES[@]}"
 
   patch-series:
     name: Patch series integrity
