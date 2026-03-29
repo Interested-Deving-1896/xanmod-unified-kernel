@@ -1,0 +1,26 @@
+ci:
+  - changed-files:
+    - any-glob-to-any-file: '.github/workflows/**'
+
+packaging/slackware:
+  - changed-files:
+    - any-glob-to-any-file: 'packaging/slackware/**'
+
+packaging/deb:
+  - changed-files:
+    - any-glob-to-any-file: 'packaging/debian/**'
+
+packaging/rpm:
+  - changed-files:
+    - any-glob-to-any-file: 'packaging/fedora/**'
+    - any-glob-to-any-file: 'packaging/rpm/**'
+
+config:
+  - changed-files:
+    - any-glob-to-any-file: 'configs/**'
+    - any-glob-to-any-file: '*.config'
+
+docs:
+  - changed-files:
+    - any-glob-to-any-file: '*.md'
+    - any-glob-to-any-file: 'docs/**'
