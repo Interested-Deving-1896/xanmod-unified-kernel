@@ -6,14 +6,6 @@ on:
   pull_request:
     branches: [main]
 
-# Fast lint pipeline — runs on every PR/push, no kernel source required.
-# Checks:
-#   1. Shell script syntax (bash -n)
-#   2. shellcheck static analysis
-#   3. Patch series files reference real patch files
-#   4. Config fragments are valid Kconfig syntax (key=value or # comment)
-#   5. Profile scripts are valid bash and only set known variables
-
 jobs:
   shellcheck:
     name: Shell syntax & shellcheck
@@ -34,8 +26,6 @@ jobs:
       - name: shellcheck
         run: |
           echo "==> Running shellcheck..."
-          # Collect only .sh files; exclude .git and gentoo-overlay (ebuilds
-          # use bash-isms that shellcheck flags but are valid in ebuild context)
           mapfile -t SH_FILES < <(find . -name "*.sh" \
             -not -path "./.git/*" \
             -not -path "./gentoo-overlay/*")
@@ -88,11 +78,8 @@ jobs:
           find configs -name "*.config" | while read -r cfg; do
             BAD=0
             while IFS= read -r line; do
-              # Allow: blank lines, comments
               [[ -z "$line" ]] && continue
               [[ "$line" =~ ^[[:space:]]*# ]] && continue
-              # Allow: CONFIG_FOO=y/m/n/"string"/number
-              # Note: Kconfig symbol names may contain lowercase (e.g. ACP5x, ACP6x)
               if ! [[ "$line" =~ ^CONFIG_[A-Za-z0-9_]+=(y|m|n|[0-9]+|\".*\")$ ]] && \
                  ! [[ "$line" =~ ^#[[:space:]]CONFIG_[A-Za-z0-9_]+[[:space:]]is[[:space:]]not[[:space:]]set$ ]]; then
                 echo "  INVALID LINE in $cfg: $line"
@@ -136,7 +123,6 @@ jobs:
           WARN=0
 
           find patches -name "*.patch" | sort | while read -r patch; do
-            # Check for UPSTREAM STATUS annotation
             if ! grep -qi "^UPSTREAM STATUS:" "$patch"; then
               echo "  MISSING HEADER: $patch"
               echo "    Add a line: 'UPSTREAM STATUS: <status>'"
@@ -149,7 +135,6 @@ jobs:
             fi
           done
 
-          # Check that active (uncommented) series entries have patches with headers
           find patches -name "series" | while read -r series; do
             dir=$(dirname "$series")
             while IFS= read -r line; do
@@ -179,7 +164,6 @@ jobs:
               [[ -z "${line// }" ]] && continue
               patch_path="$dir/$line"
               if [[ -f "$patch_path" ]]; then
-                # Check if patch is annotated as upstream-merged
                 if grep -qi "^UPSTREAM STATUS:.*\(UPSTREAM\|MERGED\|upstream in\)" \
                     "$patch_path" 2>/dev/null; then
                   echo "  WARNING: $patch_path is active in series but marked as upstream"
@@ -190,7 +174,6 @@ jobs:
             done < "$series"
           done
 
-          # Warnings don't fail the build
           [[ $WARN -eq 1 ]] && echo "" && \
             echo "  ⚠ Some active patches are marked upstream — review series files"
           exit 0
