@@ -21,6 +21,21 @@ KERNEL_SRC="${KERNEL_SRC:?KERNEL_SRC not set}"
 KARCH="${KARCH:?KARCH not set}"
 APT_MODE="${1:-}"
 
+# ── Deepin immutable filesystem check ─────────────────────────────────────────
+# Deepin Linux uses an immutable root filesystem by default. Installing a
+# kernel requires temporarily enabling write access first.
+# Detection: /etc/deepin-version exists on Deepin systems.
+if [[ -f /etc/deepin-version ]] && command -v deepin-immutable-writable &>/dev/null; then
+  echo "==> Deepin Linux detected — enabling writable filesystem"
+  deepin-immutable-writable enable || {
+    echo "ERROR: Could not enable writable filesystem on Deepin." >&2
+    echo "       Run manually: sudo deepin-immutable-writable enable" >&2
+    exit 1
+  }
+  # Register a trap to re-enable immutability after install completes or fails
+  trap 'echo "==> Re-enabling Deepin immutable filesystem"; deepin-immutable-writable disable' EXIT
+fi
+
 # ── APT mode (pre-built, x86-64 Debian/Ubuntu only) ──────────────────────────
 if [[ "${APT_MODE}" == "--apt" ]]; then
   if [[ "${KARCH}" != "x86" ]]; then

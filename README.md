@@ -89,13 +89,87 @@ All flags are environment variables. Set them on the command line or in a profil
 
 ## Distro support
 
-| Distro | Detection | Install method |
-|--------|-----------|---------------|
-| Debian / Ubuntu | `apt` present | `make bindeb-pkg` → `dpkg -i` |
-| Arch Linux | `pacman` present | `make pacman-pkg` → `pacman -U` |
-| Gentoo | `emerge` present | `make install` + `genkernel` |
-| Fedora / openSUSE | `dnf` / `zypper` present | `make rpm-pkg` → `dnf install` |
-| Any other | fallback | `make install` + auto-detect initramfs tool |
+`build.sh` auto-detects the running distro via `/etc/os-release` and falls
+back to package manager detection. Override with `DISTRO=<backend>`.
+
+### Backends
+
+| Backend | Install method | Initramfs tool | Bootloader |
+|---------|---------------|----------------|------------|
+| `debian` | `make bindeb-pkg` → `dpkg -i` | `update-initramfs` | `update-grub` |
+| `arch` | `make pacman-pkg` → `pacman -U` | `mkinitcpio` | `grub-mkconfig` |
+| `gentoo` | `make install` + modules | `genkernel` | `grub-mkconfig` |
+| `fedora` | `make rpm-pkg` → `dnf install` | `dracut` | `grub2-mkconfig` |
+| `opensuse` | `make rpm-pkg` → `zypper install` | `dracut` | `grub2-mkconfig` |
+| `alpine` | `make install` + manual copy | `mkinitfs` | `update-extlinux` |
+| `void` | `make install` + modules | `dracut` | `grub-mkconfig` |
+| `slackware` | `make install` + manual copy | `mkinitrd` | `lilo` / `grub` |
+| `generic` | `make install` + modules | auto-detected | auto-detected |
+
+### Distro compatibility matrix
+
+Sourced from [fresh-eggs/SUPPORTED-DISTROS.md](https://github.com/pieroproietti/fresh-eggs/blob/main/SUPPORTED-DISTROS.md).
+
+#### ✅ Supported via `debian` backend
+Debian, Ubuntu, Kubuntu, Xubuntu, Lubuntu, Ubuntu MATE, Ubuntu Studio,
+Linux Mint, Zorin OS, Pop!\_OS, elementary OS, KDE neon, Kali Linux,
+Parrot OS, Devuan, SparkyLinux, BunsenLabs, Proxmox VE, AnduinOS,
+Linuxfx, Voyager, Linux Lite, Q4OS, Bodhi Linux, Peppermint OS,
+Feren OS, Rhino Linux, PikaOS, Damn Small Linux, Endless OS,
+Emmabuntüs, Kodachi, AV Linux, wattOS, MakuluLinux, BlendOS,
+BigLinux, DragonOS, MX Linux, antiX, Tails, deepin ¹,
+TUXEDO OS, SDesk, FunOS, Mabox ², Regata ³
+
+> ¹ deepin: `packaging/debian/install.sh` automatically runs
+> `deepin-immutable-writable enable` before installing and restores
+> immutability on exit.
+>
+> ² Mabox is Arch-based — detected via `arch` backend, listed here for reference.
+>
+> ³ Regata is openSUSE-based — detected via `opensuse` backend.
+
+#### ✅ Supported via `arch` backend
+Arch Linux, EndeavourOS, Manjaro, CachyOS, Garuda Linux, Bluestar,
+RebornOS, Archcraft, ArchBang, Artix Linux, Mabox Linux
+
+#### ✅ Supported via `fedora` backend
+Fedora, Nobara, AlmaLinux, Rocky Linux, Red Hat Enterprise Linux,
+Oracle Linux, Bazzite, Ultramarine Linux, CentOS
+
+#### ✅ Supported via `opensuse` backend
+openSUSE Leap, openSUSE Tumbleweed, Regata OS
+
+#### ✅ Supported via `gentoo` backend
+Gentoo, Calculate Linux
+
+#### ✅ Supported via `alpine` backend
+Alpine Linux (glibc and musl variants)
+
+#### ✅ Supported via `void` backend
+Void Linux (glibc and musl variants)
+
+#### ✅ Supported via `slackware` backend
+Slackware, Porteus, AUSTRUMI
+
+#### ⚠️ Partial / manual steps required
+| Distro | Reason | Workaround |
+|--------|--------|------------|
+| Garuda | Uses `garuda-dracut` which conflicts with `mkinitcpio` | Remove `garuda-dracut` first, or use `generic` backend |
+| NixOS | Kernels managed declaratively via nixpkgs | Use a Nix overlay (not yet implemented) |
+| deepin | Immutable root filesystem | Handled automatically by `packaging/debian/install.sh` |
+
+#### ❌ Not supported
+| Distro | Reason |
+|--------|--------|
+| FreeBSD / GhostBSD / OpenBSD | Not Linux |
+| ReactOS / Haiku | Not Linux |
+| NixOS | Architecturally incompatible with source-build install |
+| Puppy / EasyOS / Tiny Core | Independent base, no standard package manager |
+| Chimera Linux | Uses LLVM/clang toolchain; kernel build untested |
+| KaOS | Independent base |
+| Mageia / OpenMandriva / PCLinuxOS / ALT | Mandrake-based, not tested |
+| Solus | Independent base (eopkg) |
+| TrueNAS | Appliance OS, not a general-purpose distro |
 
 For Debian/Ubuntu, pre-built `.deb` packages are also available on the
 [Releases](../../releases) page for x86-64 (v2, v3) and ARM64.

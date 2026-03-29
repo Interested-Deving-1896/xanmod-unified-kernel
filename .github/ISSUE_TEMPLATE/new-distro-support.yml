@@ -1,5 +1,5 @@
 name: New distro support
-description: Request or propose packaging support for a new Linux distribution
+description: Request or propose packaging support for a distro not in the compatibility matrix
 labels: ["packaging", "help wanted"]
 body:
   - type: markdown

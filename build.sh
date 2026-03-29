@@ -150,9 +150,7 @@ detect_mlevel() {
 #   slackware → Slackware, Porteus, AUSTRUMI
 #   generic   → fallback: make install + auto-detect initramfs tool
 detect_distro() {
-  local os_id os_id_like
-  os_id=""
-  os_id_like=""
+  local os_id="" os_id_like=""
   if [[ -f /etc/os-release ]]; then
     os_id=$(. /etc/os-release 2>/dev/null && echo "${ID:-}")
     os_id_like=$(. /etc/os-release 2>/dev/null && echo "${ID_LIKE:-}")
