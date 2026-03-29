@@ -126,13 +126,80 @@ detect_mlevel() {
 [[ -z "${MLEVEL}" ]] && MLEVEL="$(detect_mlevel)"
 
 # ── Detect distro / package manager ───────────────────────────────────────────
+# Maps the running system to a packaging backend in packaging/<distro>/.
+#
+# Detection uses /etc/os-release ID and ID_LIKE first (most reliable),
+# then falls back to package manager presence for distros without os-release.
+#
+# Derivative coverage:
+#   debian    → Debian, Ubuntu + all flavours, Mint, Zorin, Pop!_OS,
+#               elementary, KDE neon, Kali, Parrot, Devuan, SparkyLinux,
+#               BunsenLabs, Proxmox, AnduinOS, Linuxfx, Voyager, Lite,
+#               Q4OS, Bodhi, Peppermint, Feren, Rhino, PikaOS, Damn Small,
+#               Endless, Emmabuntüs, Kodachi, AV Linux, wattOS, MakuluLinux,
+#               Ubuntu Studio, Ubuntu MATE, BlendOS, BigLinux, DragonOS,
+#               deepin (+ immutable fs workaround), MX Linux, antiX, Tails
+#   arch      → Arch, EndeavourOS, Manjaro, CachyOS, Garuda, Bluestar,
+#               RebornOS, Archcraft, ArchBang, Artix, Mabox
+#   gentoo    → Gentoo, Calculate
+#   fedora    → Fedora, Nobara, AlmaLinux, Rocky, Red Hat, Oracle,
+#               Bazzite, Ultramarine, CentOS
+#   opensuse  → openSUSE, Regata
+#   alpine    → Alpine Linux (musl libc, OpenRC/s6)
+#   void      → Void Linux (glibc and musl variants, runit)
+#   slackware → Slackware, Porteus, AUSTRUMI
+#   generic   → fallback: make install + auto-detect initramfs tool
 detect_distro() {
-  if   command -v apt    &>/dev/null; then echo "debian"
-  elif command -v pacman &>/dev/null; then echo "arch"
-  elif command -v emerge &>/dev/null; then echo "gentoo"
-  elif command -v dnf    &>/dev/null; then echo "fedora"
-  elif command -v zypper &>/dev/null; then echo "opensuse"
-  else                                     echo "generic"
+  local os_id os_id_like
+  os_id=""
+  os_id_like=""
+  if [[ -f /etc/os-release ]]; then
+    os_id=$(. /etc/os-release 2>/dev/null && echo "${ID:-}")
+    os_id_like=$(. /etc/os-release 2>/dev/null && echo "${ID_LIKE:-}")
+  fi
+
+  # Explicit ID match (most reliable — set by the distro itself)
+  case "${os_id}" in
+    alpine)                                    echo "alpine";    return ;;
+    void)                                      echo "void";      return ;;
+    slackware)                                 echo "slackware"; return ;;
+    gentoo|calculate)                          echo "gentoo";    return ;;
+    arch|manjaro|endeavouros|cachyos|garuda|\
+      artix|archcraft|rebornos|blendos)        echo "arch";      return ;;
+    opensuse*|suse*)                           echo "opensuse";  return ;;
+    fedora|nobara|centos|rhel|almalinux|\
+      rocky|ol|amzn|bazzite|ultramarine)       echo "fedora";    return ;;
+    debian|ubuntu|linuxmint|pop|elementary|\
+      kali|parrot|devuan|sparky|bunsen|\
+      proxmox|zorin|deepin|mx|antix|bodhi|\
+      peppermint|feren|rhino|pika|biglinux|\
+      dragonos|anduinos|linuxfx|voyager|\
+      lite|q4os|emmabuntus|kodachi|watt|\
+      makululinux|tails|endless|kubuntu|\
+      xubuntu|lubuntu)                         echo "debian";    return ;;
+  esac
+
+  # ID_LIKE fallback (derivatives that inherit a base but set their own ID)
+  case "${os_id_like}" in
+    *alpine*)                                  echo "alpine";    return ;;
+    *arch*)                                    echo "arch";      return ;;
+    *gentoo*)                                  echo "gentoo";    return ;;
+    *fedora*|*rhel*|*centos*)                  echo "fedora";    return ;;
+    *opensuse*|*suse*)                         echo "opensuse";  return ;;
+    *debian*|*ubuntu*)                         echo "debian";    return ;;
+  esac
+
+  # Package manager presence fallback (for distros without /etc/os-release)
+  if   command -v apk          &>/dev/null; then echo "alpine"
+  elif command -v xbps-install &>/dev/null; then echo "void"
+  elif command -v installpkg   &>/dev/null; then echo "slackware"
+  elif command -v pacman       &>/dev/null; then echo "arch"
+  elif command -v emerge       &>/dev/null; then echo "gentoo"
+  elif command -v dnf          &>/dev/null; then echo "fedora"
+  elif command -v yum          &>/dev/null; then echo "fedora"
+  elif command -v zypper       &>/dev/null; then echo "opensuse"
+  elif command -v apt          &>/dev/null; then echo "debian"
+  else                                           echo "generic"
   fi
 }
 
