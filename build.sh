@@ -21,11 +21,14 @@
 #   ENABLE_NET_PATCHES=1         Apply network patches
 #   ENABLE_CACHY=1               Apply CachyOS scheduler patch
 #   ENABLE_PARALLEL_BOOT=1       Apply parallel boot patch
+#   ENABLE_BDFS=1                Build btrfs_dwarfs module (btrfs-dwarfs-framework)
 #   NO_DEBUG=1                   Apply no-debug config fragment
 #   LZ4_SWAP=1                   Apply LZ4 swap config fragment
 #   VENDOR=amd|intel             Apply vendor-specific config fragment
 #   EXTRA_CONFIG=path            Merge an additional .config fragment
 #   FULL_CLONE=1                 Full git clone instead of shallow
+#   BDFS_SRC=path                Path to a btrfs-dwarfs-framework checkout
+#                                (default: auto-cloned into kernel/bdfs-src)
 
 set -euo pipefail
 
@@ -50,6 +53,8 @@ ENABLE_FS_PATCHES="${ENABLE_FS_PATCHES:-0}"
 ENABLE_NET_PATCHES="${ENABLE_NET_PATCHES:-0}"
 ENABLE_CACHY="${ENABLE_CACHY:-0}"
 ENABLE_PARALLEL_BOOT="${ENABLE_PARALLEL_BOOT:-0}"
+ENABLE_BDFS="${ENABLE_BDFS:-0}"
+BDFS_SRC="${BDFS_SRC:-${REPO_ROOT}/kernel/bdfs-src}"
 NO_DEBUG="${NO_DEBUG:-0}"
 LZ4_SWAP="${LZ4_SWAP:-0}"
 EXTRA_CONFIG="${EXTRA_CONFIG:-}"
@@ -228,6 +233,7 @@ echo "    Features :"
 [[ "${ENABLE_PARALLEL_BOOT}" == "1" ]] && echo "               Parallel boot"
 [[ "${NO_DEBUG}"             == "1" ]] && echo "               No-debug"
 [[ "${LZ4_SWAP}"             == "1" ]] && echo "               LZ4 swap"
+[[ "${ENABLE_BDFS}"          == "1" ]] && echo "               BTRFS+DwarFS framework"
 echo ""
 
 # ── Step 1: Fetch kernel source ────────────────────────────────────────────────
@@ -243,7 +249,7 @@ fi
 
 # ── Step 2: Apply patches ──────────────────────────────────────────────────────
 export ENABLE_ROG ENABLE_MEDIATEK_BT ENABLE_FS_PATCHES \
-       ENABLE_NET_PATCHES ENABLE_CACHY ENABLE_PARALLEL_BOOT
+       ENABLE_NET_PATCHES ENABLE_CACHY ENABLE_PARALLEL_BOOT ENABLE_BDFS
 
 "${SCRIPTS_DIR}/apply-patches.sh" "${KERNEL_SRC}" "${PATCHES_DIR}"
 
@@ -284,6 +290,9 @@ FRAGMENTS+=("${CONFIGS_DIR}/features/performance.config")
 # Hardware fragments
 [[ "${ENABLE_ROG}"  == "1" ]] && FRAGMENTS+=("${CONFIGS_DIR}/hardware/asus-rog.config")
 
+# BTRFS+DwarFS framework
+[[ "${ENABLE_BDFS}" == "1" ]] && FRAGMENTS+=("${CONFIGS_DIR}/features/btrfs-dwarfs.config")
+
 # User-supplied extra fragment (last — highest priority)
 [[ -n "${EXTRA_CONFIG}" && -f "${EXTRA_CONFIG}" ]] && FRAGMENTS+=("${EXTRA_CONFIG}")
 
@@ -300,6 +309,13 @@ make -j"${JOBS}" ARCH="${KARCH}" olddefconfig
 echo ""
 echo "==> Building kernel (jobs: ${JOBS})"
 time make -j"${JOBS}" ARCH="${KARCH}" ${CROSS_COMPILE:+CROSS_COMPILE="${CROSS_COMPILE}"}
+
+# ── Step 4b: Build btrfs_dwarfs out-of-tree module ────────────────────────────
+if [[ "${ENABLE_BDFS}" == "1" ]]; then
+  echo ""
+  echo "==> Building btrfs_dwarfs module"
+  "${SCRIPTS_DIR}/build-bdfs.sh" "${KERNEL_SRC}" "${BDFS_SRC}"
+fi
 
 # ── Step 5: Install ───────────────────────────────────────────────────────────
 if [[ "${DO_INSTALL}" == "1" ]]; then
