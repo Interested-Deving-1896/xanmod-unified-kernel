@@ -11,6 +11,7 @@ jobs:
     name: Shell syntax & shellcheck
     runs-on: ubuntu-latest
     steps:
+      - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
 
       - name: Install shellcheck
@@ -43,6 +44,7 @@ jobs:
     name: Patch series integrity
     runs-on: ubuntu-latest
     steps:
+      - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
 
       - name: Verify series files reference existing patch files
@@ -69,6 +71,7 @@ jobs:
     name: Config fragment syntax
     runs-on: ubuntu-latest
     steps:
+      - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
 
       - name: Validate .config fragment syntax
@@ -95,6 +98,7 @@ jobs:
     name: Profile validation
     runs-on: ubuntu-latest
     steps:
+      - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
 
       - name: Validate profile scripts
@@ -114,6 +118,7 @@ jobs:
     name: Patch upstream-status annotations
     runs-on: ubuntu-latest
     steps:
+      - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
 
       - name: Check all active patches have UPSTREAM STATUS headers
