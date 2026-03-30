@@ -23,6 +23,7 @@ jobs:
       image: index.docker.io/library/archlinux@sha256:8435d30c1462f94345c3894ebbeaeecd658fcb284aa41b0bcc5f88728933447f # ratchet:archlinux:latest
 
     steps:
+      - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
       - name: Install dependencies
         run: |
           pacman -Syu --noconfirm
@@ -81,6 +82,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
       - name: Download all artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # ratchet:actions/download-artifact@v4
         with:
