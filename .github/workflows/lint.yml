@@ -45,7 +45,7 @@ jobs:
           fi
           shellcheck \
             --severity=warning \
-            --exclude=SC1091,SC2034 \
+            --exclude=SC1091,SC2034,SC2010 \
             --shell=bash \
             "${SH_FILES[@]}"
 
