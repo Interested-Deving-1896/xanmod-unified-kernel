@@ -42,7 +42,7 @@ curl -sL https://github.com/actions/runner/releases/download/v2.317.0/actions-ru
 
 # Configure (replace TOKEN and REPO_URL)
 ./config.sh \
-  --url https://github.com/Interested-Deving-1896/xanmod-unified-kernel \
+  --url https://gitlab.com/OSPF1896/xanmod-unified-kernel \
   --token YOUR_TOKEN_HERE \
   --name "$(hostname)-x86-64" \
   --labels "self-hosted,x86-64,linux" \
