@@ -1,139 +1,97 @@
-# Self-Hosted Runner Setup
+# Runner Strategy for Kernel Build Repos
 
-The `build-selfhosted.yml` workflow produces actual kernel packages (.deb,
-.pkg.tar.zst, .rpm) and requires a machine with enough resources to complete
-a kernel compile. GitHub's free runners time out before a kernel build finishes.
+Kernel builds (`xan-mod-linux-kernel`, `xanmod-unified-kernel`) cannot run on
+standard shared runners — a full kernel compile takes 20–40 minutes on 8 cores
+and produces ~15 GB of artifacts.
 
-## Minimum requirements
+## Runner options
+
+### Option A — GitLab SaaS large runners (requires Premium/Ultimate)
+
+The current `.gitlab-ci.yml` files use:
+
+```yaml
+tags: [saas-linux-xlarge-amd64]
+```
+
+`saas-linux-xlarge-amd64` provides 8 vCPUs / 32 GB RAM and is available on
+GitLab Premium and Ultimate plans. On the free plan these jobs will be stuck
+in "pending" indefinitely.
+
+**To use:** Upgrade the `openos-project` group to Premium, or use a GitLab
+trial. No runner registration needed.
+
+### Option B — Self-hosted runner (free plan compatible)
+
+Register a GitLab Runner on a machine with sufficient resources.
+
+**Minimum requirements:**
 
 | Resource | Minimum | Recommended |
-|----------|---------|-------------|
+|---|---|---|
 | CPU cores | 4 | 8–16 |
 | RAM | 8 GB | 16–32 GB |
 | Disk (free) | 30 GB | 60 GB |
-| OS | Any Linux | Debian/Ubuntu or Arch |
+| OS | Any Linux | Debian/Ubuntu |
 
-A kernel build with `make -j$(nproc)` on 8 cores takes roughly 20–40 minutes
-depending on the config. The source tree + build artifacts use ~15 GB.
+**Registration steps:**
 
----
+1. Install GitLab Runner:
+   ```bash
+   curl -L https://packages.gitlab.com/install/repositories/runner/gitlab-runner/script.deb.sh | sudo bash
+   sudo apt-get install gitlab-runner
+   ```
 
-## Register a runner
+2. Get a runner token from the project:
+   **Settings → CI/CD → Runners → New project runner**
 
-### 1. Get the registration token
+3. Register:
+   ```bash
+   sudo gitlab-runner register \
+     --url https://gitlab.com \
+     --token <runner-token> \
+     --executor docker \
+     --docker-image debian:trixie \
+     --description "kernel-builder" \
+     --tag-list kernel-builder
+   ```
 
-Go to your repository on GitHub:
-**Settings → Actions → Runners → New self-hosted runner**
+4. Update `.gitlab-ci.yml` to use your tag instead of `saas-linux-xlarge-amd64`:
+   ```yaml
+   tags: [kernel-builder]
+   ```
 
-Select **Linux** and your architecture (x86-64 or ARM64).
-Copy the token shown — it expires after 1 hour.
+### Option C — Disable build CI, use upstream artifacts (current fallback)
 
-### 2. Install the runner agent
+If neither Premium nor a self-hosted runner is available, the CI jobs will
+remain but simply won't run (they stay pending). Kernel packages can be
+obtained directly from upstream:
 
-```bash
-# Create a dedicated user (recommended)
-sudo useradd -m -s /bin/bash github-runner
-sudo su - github-runner
+- XanMod: https://xanmod.org
+- Liquorix: https://liquorix.net
 
-# Download the runner (check https://github.com/actions/runner/releases for latest)
-mkdir actions-runner && cd actions-runner
-curl -sL https://github.com/actions/runner/releases/download/v2.317.0/actions-runner-linux-x64-2.317.0.tar.gz \
-  | tar xz
+The tracking-fork CI (lint, upstream-check, security scan) runs on standard
+shared runners and is unaffected.
 
-# Configure (replace TOKEN and REPO_URL)
-./config.sh \
-  --url https://gitlab.com/OSPF1896/xanmod-unified-kernel \
-  --token YOUR_TOKEN_HERE \
-  --name "$(hostname)-x86-64" \
-  --labels "self-hosted,x86-64,linux" \
-  --work "_work" \
-  --unattended
-```
+## Current state
 
-For ARM64 runners, change the download URL to `actions-runner-linux-arm64-*.tar.gz`
-and use `--labels "self-hosted,arm64,linux"`.
+| Repo | CI jobs on shared runners | CI jobs needing large runner |
+|---|---|---|
+| `xan-mod-linux-kernel` | — | `7.0 x64v2`, `7.0 x64v3` |
+| `xanmod-unified-kernel` | `lint`, `upstream-check` | `build:*` |
 
-### 3. Install as a systemd service
+The `lint` and `upstream-check` jobs in `xanmod-unified-kernel` run on
+`alpine:3.19` and work on the free plan today.
 
-```bash
-# Still as github-runner user, from the actions-runner directory
-sudo ./svc.sh install github-runner
-sudo ./svc.sh start
-sudo ./svc.sh status
-```
+## Switching runner tags
 
-### 4. Install kernel build dependencies
-
-```bash
-# Debian/Ubuntu
-sudo apt-get install -y build-essential bc bison flex libssl-dev \
-  libelf-dev libncurses-dev dwarves pahole cpio zstd lz4 git
-
-# Arch Linux
-sudo pacman -S --needed base-devel bc bison flex openssl libelf \
-  pahole cpio zstd lz4 git
-
-# Fedora
-sudo dnf install -y gcc make bc bison flex openssl-devel \
-  elfutils-libelf-devel ncurses-devel dwarves pahole cpio zstd lz4 git
-```
-
----
-
-## Trigger a build
-
-Once the runner is registered and online, trigger a build from the GitHub UI:
-
-**Actions → Build (self-hosted) → Run workflow**
-
-Or via the GitHub CLI:
-
-```bash
-gh workflow run build-selfhosted.yml \
-  --field branch=MAIN \
-  --field mlevel=v3 \
-  --field profile=desktop \
-  --field upload_release=false
-```
-
----
-
-## Multiple runners
-
-To build x86-64 and ARM64 simultaneously, register one runner per architecture
-with the appropriate label. The workflow selects the runner via:
+To switch from SaaS large runners to a self-hosted runner, replace the `tags`
+field in each build job:
 
 ```yaml
-runs-on:
-  - self-hosted
-  - ${{ inputs.arch == 'arm64' && 'arm64' || 'x86-64' }}
+# Before (Premium required)
+tags: [saas-linux-xlarge-amd64]
+
+# After (self-hosted)
+tags: [kernel-builder]
 ```
-
----
-
-## Security considerations
-
-- Self-hosted runners execute arbitrary code from the repository. Only use
-  them with **private repositories** or repositories where you control all
-  contributors, unless you fully trust all PRs.
-- For public repositories, restrict the `build-selfhosted.yml` workflow to
-  run only on protected branches or require manual approval for external PRs:
-  **Settings → Actions → General → Fork pull request workflows**
-- The runner user needs `sudo` access only for `apt-get install` / `pacman -S`.
-  Consider pre-installing all dependencies and removing sudo access from the
-  runner user after setup.
-
----
-
-## Caching the kernel source
-
-The kernel source tree (~2 GB shallow clone) is re-fetched on every run by
-default. To cache it between runs, add a persistent work directory:
-
-```bash
-# In config.sh, set --work to a persistent path outside the runner directory
-./config.sh ... --work /var/lib/github-runner/work
-```
-
-Then set `FULL_CLONE=0` (default) and `DO_FETCH=1` (default) — `fetch.sh`
-will `git pull` the existing tree rather than re-cloning.
