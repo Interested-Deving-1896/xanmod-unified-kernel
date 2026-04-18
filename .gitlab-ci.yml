@@ -24,6 +24,7 @@ variables:
   before_script:
     - apt-get update -qq
     - apt-get install -y --no-install-recommends
+        ca-certificates
         build-essential bc bison flex libssl-dev libelf-dev
         libncurses-dev dwarves pahole cpio zstd lz4 git wget curl
 
