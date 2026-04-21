@@ -50,7 +50,7 @@ jobs:
   build:
     name: "XanMod ${{ inputs.branch || 'MAIN' }} ${{ inputs.arch || 'x86' }} ${{ inputs.profile || inputs.mlevel || 'v3' }}"
     # Runners must be tagged with 'self-hosted' and either 'x86-64' or 'arm64'
-    if: github.repository == 'Interested-Deving-1896/xanmod-unified-kernel'
+    if: github.repository == 'OSPF1896/xanmod-unified-kernel'
     runs-on:
       - self-hosted
       - ${{ inputs.arch == 'arm64' && 'arm64' || 'x86-64' }}

@@ -30,7 +30,7 @@ on:
 jobs:
   build:
     name: "XanMod ${{ matrix.branch }} x86-64-${{ matrix.mlevel }}"
-    if: github.repository == 'Interested-Deving-1896/xanmod-unified-kernel'
+    if: github.repository == 'OSPF1896/xanmod-unified-kernel'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -92,7 +92,7 @@ jobs:
 
   release:
     needs: build
-    if: github.repository == 'Interested-Deving-1896/xanmod-unified-kernel' && startsWith(github.ref, 'refs/tags/v')
+    if: github.repository == 'OSPF1896/xanmod-unified-kernel' && startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
