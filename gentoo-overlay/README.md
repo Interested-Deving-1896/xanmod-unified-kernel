@@ -9,7 +9,7 @@ patch system and Kconfig fragments from this repository.
 
 ```bash
 eselect repository add xanmod git \
-  https://gitlab.com/OSPF1896/xanmod-unified-kernel.git
+  https://gitlab.com/openos-project/linux-kernel_filesystem_deving/xanmod-unified-kernel.git
 
 # Sync only this overlay
 emaint sync -r xanmod
@@ -21,7 +21,7 @@ The ebuild references the xanmod-unified repo for patches and config fragments.
 Clone it to one of the default search paths:
 
 ```bash
-git clone https://gitlab.com/OSPF1896/xanmod-unified-kernel.git \
+git clone https://gitlab.com/openos-project/linux-kernel_filesystem_deving/xanmod-unified-kernel.git \
   /usr/local/src/xanmod-unified
 ```
 
