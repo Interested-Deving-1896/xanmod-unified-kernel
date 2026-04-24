@@ -20,3 +20,4 @@ linux-*.changes
 *.swo
 .idea/
 .vscode/
+.npmrc
