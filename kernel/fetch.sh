@@ -123,7 +123,10 @@ if [[ -d "${SRC_DIR}/.git" ]]; then
     git fetch "${DEPTH_ARGS[@]}" origin "${GIT_BRANCH}"
     git checkout "${GIT_BRANCH}"
   fi
-  git pull "${DEPTH_ARGS[@]}" origin "${GIT_BRANCH}"
+  git fetch "${DEPTH_ARGS[@]}" origin "${GIT_BRANCH}"
+  # XanMod force-pushes branches on new releases; reset hard rather than
+  # pull so divergent histories (from a forced update) never block the fetch.
+  git reset --hard "origin/${GIT_BRANCH}"
 else
   echo "==> Cloning (this will take a while for a full clone)"
   git clone "${DEPTH_ARGS[@]}" \
