@@ -65,7 +65,9 @@ _Original project — no upstream fork._
 ## Resources
 
 <!-- AI:start:resources -->
-_No additional resource files found._
+| File | Description |
+|---|---|
+| [config/gitlab-subgroups.yml](https://github.com/Interested-Deving-1896/xanmod-unified-kernel/blob/main/config/gitlab-subgroups.yml) | GitLab subgroup map |
 <!-- AI:end:resources -->
 
 ## License
