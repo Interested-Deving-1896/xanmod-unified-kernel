@@ -1,0 +1,108 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/**'
+      - 'configs/**'
+      - 'Makefile'
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      distro:
+        description: 'Target distro'
+        required: false
+        default: 'debian'
+        type: choice
+        options: [debian, devuan, ubuntu]
+      arch:
+        description: 'Target arch'
+        required: false
+        default: 'amd64'
+        type: choice
+        options: [amd64, arm64, armhf, riscv64, s390x, armel, ppc64el, mips64el, loong64, i686]
+      xanmod_branch:
+        description: 'XanMod branch'
+        required: false
+        default: 'main'
+
+env:
+  GITHUB_ORG: Interested-Deving-1896
+
+jobs:
+  build-tier1:
+    name: Build ${{ matrix.distro }}/${{ matrix.arch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        distro: [debian, ubuntu]
+        arch: [amd64, arm64]
+        include:
+          - distro: devuan
+            arch: amd64
+          - distro: devuan
+            arch: arm64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            build-essential bc bison flex libssl-dev libelf-dev \
+            dwarves debhelper dpkg-dev fakeroot rsync git \
+            gcc-aarch64-linux-gnu
+
+      - name: Build kernel
+        env:
+          DISTRO: ${{ matrix.distro }}
+          ARCH: ${{ matrix.arch }}
+          XANMOD_BRANCH: ${{ inputs.xanmod_branch || 'main' }}
+          SKIP_OCI: '1'
+          SKIP_RELEASE: '1'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/build.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-debs-${{ matrix.distro }}-${{ matrix.arch }}
+          path: output/${{ matrix.distro }}/${{ matrix.arch }}/*.deb
+          retention-days: 7
+
+  build-manual:
+    name: Build ${{ inputs.distro }}/${{ inputs.arch }}
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            build-essential bc bison flex libssl-dev libelf-dev \
+            dwarves debhelper dpkg-dev fakeroot rsync git \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf \
+            gcc-riscv64-linux-gnu gcc-s390x-linux-gnu
+
+      - name: Build kernel
+        env:
+          DISTRO: ${{ inputs.distro }}
+          ARCH: ${{ inputs.arch }}
+          XANMOD_BRANCH: ${{ inputs.xanmod_branch }}
+          SKIP_OCI: '1'
+          SKIP_RELEASE: '1'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash scripts/build.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-debs-${{ inputs.distro }}-${{ inputs.arch }}
+          path: output/${{ inputs.distro }}/${{ inputs.arch }}/*.deb
+          retention-days: 14

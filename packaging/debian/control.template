@@ -1,0 +1,34 @@
+Source: linux-xanmod
+Section: kernel
+Priority: optional
+Maintainer: Interested-Deving-1896 <noreply@github.com>
+Build-Depends: debhelper-compat (= 13),
+               bc,
+               bison,
+               cpio,
+               flex,
+               kmod,
+               libelf-dev,
+               libssl-dev,
+               python3,
+               rsync,
+               dwarves
+Standards-Version: 4.6.2
+Homepage: https://github.com/Interested-Deving-1896/xanmod-unified-kernel
+Vcs-Git: https://github.com/Interested-Deving-1896/xanmod-unified-kernel.git
+Vcs-Browser: https://github.com/Interested-Deving-1896/xanmod-unified-kernel
+
+Package: linux-image-@@VERSION@@-xanmod
+Architecture: @@ARCH@@
+Depends: ${misc:Depends}, kmod, initramfs-tools | linux-initramfs-tool
+Recommends: firmware-linux-free
+Description: Linux kernel @@KERNEL_VERSION@@ with XanMod patches
+ XanMod is a general-purpose Linux kernel distribution with custom settings
+ and new features. Built for @@DISTRO@@/@@ARCH@@.
+
+Package: linux-headers-@@VERSION@@-xanmod
+Architecture: @@ARCH@@
+Depends: ${misc:Depends}, build-essential
+Description: Header files for Linux kernel @@KERNEL_VERSION@@ with XanMod patches
+ Header files for building kernel modules against the XanMod kernel.
+ Built for @@DISTRO@@/@@ARCH@@.

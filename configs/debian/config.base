@@ -1,0 +1,29 @@
+# Debian base config fragments for xanmod-unified-kernel
+# Applied before arch-specific and XanMod fragments.
+
+# Debian packaging conventions
+CONFIG_LOCALVERSION=""
+CONFIG_LOCALVERSION_AUTO=n
+
+# Debian module signing
+CONFIG_MODULE_SIG=y
+CONFIG_MODULE_SIG_ALL=y
+CONFIG_MODULE_SIG_SHA512=y
+
+# Debian security defaults
+CONFIG_SECURITY=y
+CONFIG_SECURITY_SELINUX=y
+CONFIG_SECURITY_APPARMOR=y
+CONFIG_DEFAULT_SECURITY_APPARMOR=y
+
+# Debian initramfs support
+CONFIG_BLK_DEV_INITRD=y
+CONFIG_INITRAMFS_SOURCE=""
+
+# Debian firmware loading
+CONFIG_FW_LOADER=y
+CONFIG_FW_LOADER_USER_HELPER=n
+
+# Debian audit
+CONFIG_AUDIT=y
+CONFIG_AUDITSYSCALL=y

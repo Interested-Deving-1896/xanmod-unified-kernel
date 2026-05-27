@@ -1,23 +1,7 @@
-# Kernel source tree (fetched by kernel/fetch.sh)
-kernel/src/
-
-# Build artifacts
+build/
+output/
+patches/*.patch
+.cache/xanmod-linux/
 *.deb
-*.rpm
-*.pkg.tar.zst
-*.tar.gz
-*.tar.xz
-*.7z
-
-# Kernel build outputs that may land in repo root during bindeb-pkg
-linux-*.deb
-linux-*.buildinfo
-linux-*.changes
-
-# Editor / OS
-.DS_Store
-*.swp
-*.swo
-.idea/
-.vscode/
-.npmrc
+*.changes
+*.buildinfo

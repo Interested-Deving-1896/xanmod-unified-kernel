@@ -1,124 +1,95 @@
 name: Release
 
 on:
-  push:
-    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      xanmod_branch:
+        description: 'XanMod branch to build from'
+        required: true
+        default: 'main'
+      tier:
+        description: 'Which tier to build and release'
+        required: true
+        default: 'tier1'
+        type: choice
+        options: [tier1, tier2, tier3, all]
 
-# Triggered after build-x86 and build-arm64 complete on a tag push.
-# Collects all artifacts and publishes a GitHub Release with:
-#   - .deb packages (x86-64 v2/v3, arm64)
-#   - .pkg.tar.zst (Arch, built separately — see build-arch job below)
-#   - SHA256 checksums
+env:
+  GITHUB_ORG: Interested-Deving-1896
+  SKIP_OCI: '0'
+  SKIP_RELEASE: '0'
 
 jobs:
-  build-arch:
-    name: "Build Arch .pkg.tar.zst (${{ matrix.branch }})"
-    if: github.repository == 'OSPF1896/xanmod-unified-kernel'
+  build-and-release:
+    name: Release ${{ matrix.distro }}/${{ matrix.arch }}
     runs-on: ubuntu-latest
-
     strategy:
+      fail-fast: false
       matrix:
-        branch: [MAIN, LTS]
-
-    container:
-      image: index.docker.io/library/archlinux@sha256:8435d30c1462f94345c3894ebbeaeecd658fcb284aa41b0bcc5f88728933447f # ratchet:archlinux:latest
-
-    steps:
-      - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
-      - name: Install dependencies
-        run: |
-          pacman -Syu --noconfirm
-          pacman -S --noconfirm --needed \
-            base-devel bc bison flex openssl libelf pahole \
-            cpio zstd lz4 git wget
-
-      - name: Checkout
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # ratchet:actions/checkout@v4
-
-      - name: Compute cache key
-        run: echo "YEAR_WEEK=$(date -u '+%Y-W%V')" >> "$GITHUB_ENV"
-      - name: Restore kernel source cache
-        id: cache-kernel
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # ratchet:actions/cache@v4
-        with:
-          path: kernel/src
-          key: xanmod-kernel-${{ matrix.branch }}-${{ env.YEAR_WEEK }}
-          restore-keys: |
-            xanmod-kernel-${{ matrix.branch }}-
-      - name: Fetch kernel source
-        if: steps.cache-kernel.outputs.cache-hit != 'true'
-        run: ./kernel/fetch.sh ${{ matrix.branch }}
-
-      - name: Apply patches + merge config
-        run: |
-          ENABLE_ROG=0 ENABLE_MEDIATEK_BT=0 ENABLE_FS_PATCHES=0 \
-          ENABLE_NET_PATCHES=0 ENABLE_CACHY=0 ENABLE_PARALLEL_BOOT=0 \
-          ./scripts/apply-patches.sh kernel/src patches
-          cd kernel/src
-          bash ./scripts/kconfig/merge_config.sh -m .config \
-            ../../configs/base/x86-64-v3.config \
-            ../../configs/features/performance.config \
-            ../../configs/features/no-debug.config
-          make -j$(nproc) ARCH=x86 olddefconfig
-
-      - name: Build + package
-        run: |
-          cd kernel/src
-          make -j$(nproc) ARCH=x86 pacman-pkg
-
-      - name: Collect artifacts
-        run: |
-          mkdir -p dist
-          find . -name "*.pkg.tar.zst" -exec cp {} dist/ \;
-
-      - name: Upload
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # ratchet:actions/upload-artifact@v4
-        with:
-          name: xanmod-${{ matrix.branch }}-arch-pkg
-          path: dist/*.pkg.tar.zst
-
-  publish:
-    name: Publish Release
-    needs: [build-arch]
-    if: github.repository == 'OSPF1896/xanmod-unified-kernel'
-    runs-on: ubuntu-latest
+        include:
+          # Tier 1
+          - { distro: debian,  arch: amd64,   tier: tier1 }
+          - { distro: debian,  arch: arm64,   tier: tier1 }
+          - { distro: devuan,  arch: amd64,   tier: tier1 }
+          - { distro: devuan,  arch: arm64,   tier: tier1 }
+          - { distro: ubuntu,  arch: amd64,   tier: tier1 }
+          - { distro: ubuntu,  arch: arm64,   tier: tier1 }
+          # Tier 2
+          - { distro: debian,  arch: armhf,   tier: tier2 }
+          - { distro: debian,  arch: riscv64, tier: tier2 }
+          - { distro: debian,  arch: s390x,   tier: tier2 }
+          # Tier 3
+          - { distro: debian,  arch: armel,   tier: tier3 }
+          - { distro: debian,  arch: ppc64el, tier: tier3 }
+          - { distro: debian,  arch: mips64el,tier: tier3 }
+          - { distro: debian,  arch: loong64, tier: tier3 }
+          - { distro: debian,  arch: i686,    tier: tier3 }
 
     steps:
-      - uses: jfrog-fastci/fastci@2c2686537a7647c727d20c955b26bb7ce6dea6d4 # ratchet:jfrog-fastci/fastci@v0
-      - name: Download all artifacts
-        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # ratchet:actions/download-artifact@v4
-        with:
-          path: dist/
+      - uses: actions/checkout@v4
 
-      - name: Generate checksums
+      - name: Skip if tier not selected
+        id: tier_check
         run: |
-          find dist/ -type f | sort | xargs sha256sum > dist/SHA256SUMS
-          cat dist/SHA256SUMS
+          INPUT_TIER="${{ inputs.tier }}"
+          MATRIX_TIER="${{ matrix.tier }}"
+          if [[ "${INPUT_TIER}" == "all" ]] || [[ "${INPUT_TIER}" == "${MATRIX_TIER}" ]]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@153bb8e04406b158c6c84fc1615b65b24149a1fe # ratchet:softprops/action-gh-release@v2
+      - name: Install build dependencies
+        if: steps.tier_check.outputs.run == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends \
+            build-essential bc bison flex libssl-dev libelf-dev \
+            dwarves debhelper dpkg-dev fakeroot rsync git \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf \
+            gcc-arm-linux-gnueabi gcc-riscv64-linux-gnu \
+            gcc-s390x-linux-gnu gcc-powerpc64le-linux-gnu \
+            gcc-mips64el-linux-gnuabi64 gcc-i686-linux-gnu || true
+
+      - name: Set up Docker Buildx
+        if: steps.tier_check.outputs.run == 'true' && env.SKIP_OCI == '0'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: steps.tier_check.outputs.run == 'true' && env.SKIP_OCI == '0'
+        uses: docker/login-action@v3
         with:
-          files: |
-            dist/**/*.deb
-            dist/**/*.pkg.tar.zst
-            dist/SHA256SUMS
-          generate_release_notes: true
-          body: |
-            ## XanMod Unified Kernel Release
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-            ### Packages included
-            | File | Distro | Arch |
-            |------|--------|------|
-            | `*-x86-64-v2-*.deb` | Debian/Ubuntu | x86-64 (SSE4.2+) |
-            | `*-x86-64-v3-*.deb` | Debian/Ubuntu | x86-64 (AVX2+) |
-            | `*-arm64-*.deb`     | Debian/Ubuntu | ARM64 |
-            | `*.pkg.tar.zst`     | Arch Linux    | x86-64 |
-
-            ### Install
-            See [README.md](https://github.com/${{ github.repository }}/blob/main/README.md)
-            for installation instructions per distro.
-
-            ### Verify checksums
-            ```
-            sha256sum -c SHA256SUMS
-            ```
+      - name: Build and release
+        if: steps.tier_check.outputs.run == 'true'
+        env:
+          DISTRO: ${{ matrix.distro }}
+          ARCH: ${{ matrix.arch }}
+          XANMOD_BRANCH: ${{ inputs.xanmod_branch }}
+          PUSH_OCI: '1'
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO: xanmod-unified-kernel
+        run: bash scripts/build.sh

@@ -1,0 +1,25 @@
+# Debian amd64-specific config fragments
+
+CONFIG_64BIT=y
+CONFIG_X86_64=y
+
+# CPU optimisation — generic x86-64-v2 baseline (SSE4.2, POPCNT)
+CONFIG_GENERIC_CPU2=y
+CONFIG_MCORE2=n
+
+# Large memory support
+CONFIG_HIGHMEM64G=n
+CONFIG_X86_PAE=n
+
+# IOMMU
+CONFIG_INTEL_IOMMU=y
+CONFIG_AMD_IOMMU=y
+
+# Virtualisation
+CONFIG_KVM=m
+CONFIG_KVM_INTEL=m
+CONFIG_KVM_AMD=m
+
+# NVMe / fast storage
+CONFIG_BLK_DEV_NVME=y
+CONFIG_NVME_MULTIPATH=y

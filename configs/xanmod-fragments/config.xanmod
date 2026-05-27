@@ -1,0 +1,51 @@
+# XanMod kernel config fragments
+# Applied on top of the distro base config.
+# These enable XanMod-specific features and tuning.
+
+# Scheduler
+CONFIG_SCHED_ALT=y
+CONFIG_CACULE_SCHED=n
+CONFIG_CACULE_RDB=n
+CONFIG_BORE_SCHED=y
+
+# Preemption — full preemption for desktop responsiveness
+CONFIG_PREEMPT=y
+CONFIG_PREEMPT_VOLUNTARY=n
+CONFIG_PREEMPT_NONE=n
+
+# Timer frequency — 1000Hz for low latency
+CONFIG_HZ_1000=y
+CONFIG_HZ=1000
+
+# Memory management
+CONFIG_TRANSPARENT_HUGEPAGE=y
+CONFIG_TRANSPARENT_HUGEPAGE_ALWAYS=n
+CONFIG_TRANSPARENT_HUGEPAGE_MADVISE=y
+
+# TCP BBR2 congestion control
+CONFIG_TCP_CONG_BBR2=y
+CONFIG_DEFAULT_BBR2=y
+
+# IRQ threading
+CONFIG_IRQ_FORCED_THREADING=y
+
+# Futex
+CONFIG_FUTEX=y
+CONFIG_FUTEX_PI=y
+
+# LRU
+CONFIG_LRU_GEN=y
+CONFIG_LRU_GEN_ENABLED=y
+
+# Zstd compression for modules and initramfs
+CONFIG_MODULE_COMPRESS_ZSTD=y
+CONFIG_RD_ZSTD=y
+
+# Disable debug overhead
+CONFIG_DEBUG_KERNEL=n
+CONFIG_DEBUG_INFO=n
+CONFIG_DEBUG_INFO_DWARF_TOOLCHAIN_DEFAULT=n
+CONFIG_SLUB_DEBUG=n
+CONFIG_PAGE_POISONING=n
+CONFIG_KASAN=n
+CONFIG_UBSAN=n

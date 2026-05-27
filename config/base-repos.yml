@@ -1,0 +1,123 @@
+# base-repos.yml — maps distro+arch to the corresponding kernel base repo
+#
+# Each entry describes:
+#   repo:    GitHub repo name under GITHUB_ORG
+#   tier:    build priority tier (1=highest)
+#   ready:   whether the base repo is populated (set to true once arch kernel work completes)
+#            When false, fetch-base.sh falls back to kernel.org tarball.
+#
+# The "ready" flag here is a documentation aid only.
+# The actual readiness check is the presence of a READY sentinel file in the repo.
+
+github_org: Interested-Deving-1896
+
+distros:
+  - debian
+  - devuan
+  - ubuntu
+
+base_repos:
+  # ── Tier 1 ────────────────────────────────────────────────────────────────
+  - distro: debian
+    arch: amd64
+    repo: debian-amd64-kernel-base
+    tier: 1
+    ready: false
+
+  - distro: debian
+    arch: arm64
+    repo: debian-arm64-kernel-base
+    tier: 1
+    ready: false
+
+  - distro: devuan
+    arch: amd64
+    repo: devuan-amd64-kernel-base
+    tier: 1
+    ready: false
+
+  - distro: devuan
+    arch: arm64
+    repo: devuan-arm64-kernel-base
+    tier: 1
+    ready: false
+
+  - distro: ubuntu
+    arch: amd64
+    repo: ubuntu-amd64-kernel-base
+    tier: 1
+    ready: false
+
+  - distro: ubuntu
+    arch: arm64
+    repo: ubuntu-arm64-kernel-base
+    tier: 1
+    ready: false
+
+  # ── Tier 2 ────────────────────────────────────────────────────────────────
+  - distro: debian
+    arch: armhf
+    repo: debian-armhf-kernel-base
+    tier: 2
+    ready: false
+
+  - distro: debian
+    arch: riscv64
+    repo: debian-riscv64-kernel-base
+    tier: 2
+    ready: false
+
+  - distro: debian
+    arch: s390x
+    repo: debian-s390x-kernel-base
+    tier: 2
+    ready: false
+
+  - distro: devuan
+    arch: armhf
+    repo: devuan-armhf-kernel-base
+    tier: 2
+    ready: false
+
+  - distro: ubuntu
+    arch: armhf
+    repo: ubuntu-armhf-kernel-base
+    tier: 2
+    ready: false
+
+  - distro: ubuntu
+    arch: riscv64
+    repo: ubuntu-riscv64-kernel-base
+    tier: 2
+    ready: false
+
+  # ── Tier 3 ────────────────────────────────────────────────────────────────
+  - distro: debian
+    arch: armel
+    repo: debian-armel-kernel-base
+    tier: 3
+    ready: false
+
+  - distro: debian
+    arch: ppc64el
+    repo: debian-ppc64el-kernel-base
+    tier: 3
+    ready: false
+
+  - distro: debian
+    arch: mips64el
+    repo: debian-mips64el-kernel-base
+    tier: 3
+    ready: false
+
+  - distro: debian
+    arch: loong64
+    repo: debian-loong64-kernel-base
+    tier: 3
+    ready: false
+
+  - distro: debian
+    arch: i686
+    repo: debian-i686-kernel-base
+    tier: 3
+    ready: false

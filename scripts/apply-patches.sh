@@ -1,83 +1,60 @@
 #!/usr/bin/env bash
-# scripts/apply-patches.sh — apply patch series to a kernel source tree
+# apply-patches.sh — apply XanMod patch series to the source tree
 #
-# Called by build.sh. Not intended for direct use.
-#
-# Arguments:
-#   $1  — path to kernel source tree
-#   $2  — path to patches/ directory (default: patches/ relative to repo root)
-#
-# Environment variables (set by build.sh or profile):
-#   ENABLE_ROG=1            apply patches/hardware/asus-rog/
-#   ENABLE_MEDIATEK_BT=1    apply patches/hardware/mediatek-bt/
-#   ENABLE_FS_PATCHES=1     apply patches/fs/
-#   ENABLE_NET_PATCHES=1    apply patches/net/
-#   ENABLE_CACHY=1          apply patches/sched/
-#   ENABLE_PARALLEL_BOOT=1  apply patches/boot/
+# Applies patches from PATCHES_DIR to SRC_DIR using git am.
+# Skips patches that are already applied (idempotent).
 
 set -euo pipefail
 
-KERNEL_SRC="${1:?kernel source path required}"
-PATCHES_DIR="${2:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/patches}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-apply_series() {
-  local series_file="$1"
-  local patch_dir
-  patch_dir="$(dirname "${series_file}")"
+source "${SCRIPT_DIR}/lib/log.sh"
 
-  if [[ ! -f "${series_file}" ]]; then
-    return 0
-  fi
+PATCHES_DIR="${PATCHES_DIR:-${REPO_ROOT}/patches}"
+SRC_DIR="${SRC_DIR:-${REPO_ROOT}/build/${DISTRO:-debian}/${ARCH:-amd64}/src}"
 
-  while IFS= read -r line; do
-    # skip comments and blank lines
-    [[ "${line}" =~ ^[[:space:]]*# ]] && continue
-    [[ -z "${line// }" ]] && continue
-
-    local patch_path="${patch_dir}/${line}"
-    if [[ ! -f "${patch_path}" ]]; then
-      echo "WARNING: patch not found, skipping: ${patch_path}" >&2
-      continue
-    fi
-
-    echo "  Applying: ${line}"
-    patch -p1 -d "${KERNEL_SRC}" < "${patch_path}"
-  done < "${series_file}"
-}
-
-echo "==> Applying patch sets"
-
-echo "  [core]"
-apply_series "${PATCHES_DIR}/core/series"
-
-if [[ "${ENABLE_ROG:-0}" == "1" ]]; then
-  echo "  [hardware/asus-rog]"
-  apply_series "${PATCHES_DIR}/hardware/asus-rog/series"
+if [[ ! -d "${PATCHES_DIR}" ]]; then
+  die "Patches directory not found: ${PATCHES_DIR} — run fetch-patches.sh first"
 fi
 
-if [[ "${ENABLE_MEDIATEK_BT:-0}" == "1" ]]; then
-  echo "  [hardware/mediatek-bt]"
-  apply_series "${PATCHES_DIR}/hardware/mediatek-bt/series"
+PATCH_FILES=("${PATCHES_DIR}"/*.patch)
+if [[ ! -e "${PATCH_FILES[0]}" ]]; then
+  die "No .patch files found in ${PATCHES_DIR} — run fetch-patches.sh first"
 fi
 
-if [[ "${ENABLE_FS_PATCHES:-0}" == "1" ]]; then
-  echo "  [fs]"
-  apply_series "${PATCHES_DIR}/fs/series"
+PATCH_COUNT="${#PATCH_FILES[@]}"
+log_step "apply-patches" "Applying ${PATCH_COUNT} XanMod patches to ${SRC_DIR}"
+
+if [[ ! -d "${SRC_DIR}" ]]; then
+  die "Source directory not found: ${SRC_DIR} — run fetch-base.sh first"
 fi
 
-if [[ "${ENABLE_NET_PATCHES:-0}" == "1" ]]; then
-  echo "  [net]"
-  apply_series "${PATCHES_DIR}/net/series"
+cd "${SRC_DIR}"
+
+# Initialise a git repo in the source tree if not already one
+# (vanilla tarball extractions won't have .git)
+if [[ ! -d ".git" ]]; then
+  log_info "Initialising git repo in source tree for patch application"
+  git init -q
+  git config user.email "build@xanmod-unified-kernel"
+  git config user.name "xanmod-unified-kernel build"
+  git add -A
+  git commit -q -m "vanilla kernel source"
 fi
 
-if [[ "${ENABLE_CACHY:-0}" == "1" ]]; then
-  echo "  [sched/cachy]"
-  apply_series "${PATCHES_DIR}/sched/series"
+# Check if patches already applied by looking for a marker commit
+MARKER="xanmod-patches-applied"
+if git log --oneline --grep="${MARKER}" | grep -q .; then
+  log_info "XanMod patches already applied — skipping"
+  exit 0
 fi
 
-if [[ "${ENABLE_PARALLEL_BOOT:-0}" == "1" ]]; then
-  echo "  [boot]"
-  apply_series "${PATCHES_DIR}/boot/series"
-fi
+# Apply patches
+log_info "Running git am on ${PATCH_COUNT} patches"
+git am --no-gpg-sign "${PATCHES_DIR}"/*.patch
 
-echo "==> Patch application complete"
+# Write marker commit so we can detect re-runs
+git commit --allow-empty -q -m "${MARKER}: $(cat "${PATCHES_DIR}/VERSION" 2>/dev/null | grep kernel_version | cut -d= -f2)"
+
+log_info "All ${PATCH_COUNT} patches applied successfully"

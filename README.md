@@ -1,77 +1,52 @@
-[update-readmes]   Mode: rewrite — migrating to template structure...
 # xanmod-unified-kernel
 
-[![Built with Ona](https://ona.com/build-with-ona.svg)](https://app.ona.com/#https://github.com/Interested-Deving-1896/xanmod-unified-kernel)
+Builds [XanMod](https://xanmod.org) kernel `.deb` packages for Debian, Devuan, and Ubuntu across all supported architectures.
 
-<!-- AI:start:what-it-does -->
-_Description pending._
-<!-- AI:end:what-it-does -->
+## Supported targets
 
-## Architecture
+| Tier | Arches |
+|---|---|
+| Tier 1 | amd64, arm64 |
+| Tier 2 | armhf, riscv64, s390x |
+| Tier 3 | armel, ppc64el, mips64el, loong64, i686 |
 
-<!-- AI:start:architecture -->
-_Architecture documentation pending._
-<!-- AI:end:architecture -->
+Distros: Debian, Devuan, Ubuntu.
 
-## Install
-
-<!-- Add installation instructions here. This section is yours — the AI will not modify it. -->
+## Quick start
 
 ```bash
-git clone https://github.com/Interested-Deving-1896/xanmod-unified-kernel.git
-cd xanmod-unified-kernel
+# Install build dependencies
+make bootstrap
+
+# Build for debian/amd64 (default)
+make build
+
+# Build for a specific target
+make build DISTRO=ubuntu ARCH=arm64
+
+# Build all Tier 1 targets
+make all-tier1
 ```
 
-## Usage
+## Outputs
 
-<!-- Add usage examples here. This section is yours — the AI will not modify it. -->
+- `.deb` packages in `output/{distro}/{arch}/`
+- OCI image: `ghcr.io/Interested-Deving-1896/xanmod-unified-kernel:{version}-{arch}`
+- GitHub Release with all `.deb` artifacts
+
+## Source
+
+XanMod patches are fetched from:
+- Primary: `gitlab.com/xanmod/linux` (branch: `main`)
+- Fallback: `github.com/xanmod/linux`
+
+The source tree is resolved from `{distro}-{arch}-kernel-base` repos when available, falling back to a vanilla kernel tarball from kernel.org.
 
 ## Configuration
 
-<!-- Document configuration options here. This section is yours — the AI will not modify it. -->
+Config fragments are layered in order:
+1. `configs/{distro}/config.base`
+2. `configs/{distro}/config.{arch}`
+3. `configs/xanmod-fragments/config.xanmod`
 
-## CI
-
-<!-- AI:start:ci -->
-_CI documentation pending._
-<!-- AI:end:ci -->
-
-## Mirror chain
-
-<!-- AI:start:mirror-chain -->
-This repo is maintained in [`Interested-Deving-1896/xanmod-unified-kernel`](https://github.com/Interested-Deving-1896/xanmod-unified-kernel) and mirrored through:
-
-```
-Interested-Deving-1896/xanmod-unified-kernel  ──►  OpenOS-Project-OSP/xanmod-unified-kernel  ──►  OpenOS-Project-Ecosystem-OOC/xanmod-unified-kernel
-```
-
-Changes flow downstream automatically via the hourly mirror chain in
-[`fork-sync-all`](https://github.com/Interested-Deving-1896/fork-sync-all).
-Direct commits to OSP or OOC are detected and opened as PRs back to `Interested-Deving-1896`.
-<!-- AI:end:mirror-chain -->
-
-## Contributors
-
-<!-- AI:start:contributors -->
-_Contributors pending._
-<!-- AI:end:contributors -->
-
-## Origins
-
-<!-- AI:start:origins -->
-_Original project — no upstream fork._
-<!-- AI:end:origins -->
-
-## Resources
-
-<!-- AI:start:resources -->
-| File | Description |
-|---|---|
-| [config/gitlab-subgroups.yml](https://github.com/Interested-Deving-1896/xanmod-unified-kernel/blob/main/config/gitlab-subgroups.yml) | GitLab subgroup map |
-<!-- AI:end:resources -->
-
-## License
-
-<!-- AI:start:license -->
-[MIT](https://github.com/Interested-Deving-1896/xanmod-unified-kernel/blob/main/LICENSE) © 2026 [Interested-Deving-1896](https://github.com/Interested-Deving-1896)
-<!-- AI:end:license -->
+See [AGENTS.md](AGENTS.md) for full build system documentation.

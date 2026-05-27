@@ -1,0 +1,31 @@
+# Ubuntu base config fragments for xanmod-unified-kernel
+
+CONFIG_LOCALVERSION=""
+CONFIG_LOCALVERSION_AUTO=n
+
+# Ubuntu module signing
+CONFIG_MODULE_SIG=y
+CONFIG_MODULE_SIG_ALL=y
+CONFIG_MODULE_SIG_SHA512=y
+
+# Ubuntu security defaults (AppArmor primary)
+CONFIG_SECURITY=y
+CONFIG_SECURITY_APPARMOR=y
+CONFIG_DEFAULT_SECURITY_APPARMOR=y
+CONFIG_SECURITY_SELINUX=n
+
+# Ubuntu snap/squashfs support
+CONFIG_SQUASHFS=y
+CONFIG_SQUASHFS_XZ=y
+CONFIG_SQUASHFS_ZSTD=y
+
+# Ubuntu initramfs
+CONFIG_BLK_DEV_INITRD=y
+
+# Ubuntu firmware
+CONFIG_FW_LOADER=y
+CONFIG_FW_LOADER_USER_HELPER=n
+
+# Ubuntu audit
+CONFIG_AUDIT=y
+CONFIG_AUDITSYSCALL=y
