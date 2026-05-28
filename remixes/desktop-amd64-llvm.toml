@@ -1,0 +1,32 @@
+[remix]
+name        = "xanmod-desktop-amd64-llvm"
+version     = "latest"
+flavor      = "xanmod"
+arch        = "x86_64"
+description = "XanMod desktop kernel for amd64 — Clang/LLVM + ThinLTO"
+
+[build]
+llvm         = true
+lto          = "thin"
+threads      = 0
+config       = "defconfig"
+target       = "desktop"
+output       = "deb"
+localversion = "-xanmod-clang"
+
+[patches]
+sets  = []
+files = []
+
+[cross]
+prefix = ""
+
+[output]
+build_dir    = "build/amd64-llvm"
+download_dir = "downloads"
+clean_after  = false
+remove_after = false
+
+[lkf_hook]
+script = "scripts/lkf-build.sh"
+env    = { DISTRO = "debian", ARCH = "amd64", XANMOD_BRANCH = "main", CC = "clang", LLVM = "1" }

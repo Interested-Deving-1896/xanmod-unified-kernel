@@ -1,0 +1,36 @@
+# xanmod-unified-kernel: desktop amd64 remix
+# Driven by lkf remix — delegates to scripts/build.sh via [build] hook.
+
+[remix]
+name        = "xanmod-desktop-amd64"
+version     = "latest"
+flavor      = "xanmod"
+arch        = "x86_64"
+description = "XanMod desktop kernel for amd64 — auto ISA level, GCC"
+
+[build]
+llvm         = false
+lto          = "none"
+threads      = 0
+config       = "defconfig"
+target       = "desktop"
+output       = "deb"
+localversion = "-xanmod"
+
+[patches]
+sets  = []
+files = []
+
+[cross]
+prefix = ""
+
+[output]
+build_dir    = "build/amd64"
+download_dir = "downloads"
+clean_after  = false
+remove_after = false
+
+# lkf-hook: delegate to the repo's own build pipeline
+[lkf_hook]
+script = "scripts/lkf-build.sh"
+env    = { DISTRO = "debian", ARCH = "amd64", XANMOD_BRANCH = "main" }

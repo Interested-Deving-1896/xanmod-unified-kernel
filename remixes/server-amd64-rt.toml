@@ -1,0 +1,32 @@
+[remix]
+name        = "xanmod-server-amd64-rt"
+version     = "latest"
+flavor      = "xanmod"
+arch        = "x86_64"
+description = "XanMod RT kernel for amd64 servers — PREEMPT_RT"
+
+[build]
+llvm         = false
+lto          = "none"
+threads      = 0
+config       = "defconfig"
+target       = "server"
+output       = "deb"
+localversion = "-xanmod-rt"
+
+[patches]
+sets  = ["rt"]
+files = []
+
+[cross]
+prefix = ""
+
+[output]
+build_dir    = "build/amd64-rt"
+download_dir = "downloads"
+clean_after  = false
+remove_after = false
+
+[lkf_hook]
+script = "scripts/lkf-build.sh"
+env    = { DISTRO = "debian", ARCH = "amd64", XANMOD_BRANCH = "RT" }

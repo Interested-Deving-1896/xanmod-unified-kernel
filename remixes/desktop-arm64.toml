@@ -1,0 +1,32 @@
+[remix]
+name        = "xanmod-desktop-arm64"
+version     = "latest"
+flavor      = "xanmod"
+arch        = "aarch64"
+description = "XanMod desktop kernel for arm64"
+
+[build]
+llvm         = false
+lto          = "none"
+threads      = 0
+config       = "defconfig"
+target       = "desktop"
+output       = "deb"
+localversion = "-xanmod"
+
+[patches]
+sets  = []
+files = []
+
+[cross]
+prefix = "aarch64-linux-gnu-"
+
+[output]
+build_dir    = "build/arm64"
+download_dir = "downloads"
+clean_after  = false
+remove_after = false
+
+[lkf_hook]
+script = "scripts/lkf-build.sh"
+env    = { DISTRO = "debian", ARCH = "arm64", XANMOD_BRANCH = "main" }
