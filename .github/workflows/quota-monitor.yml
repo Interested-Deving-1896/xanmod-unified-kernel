@@ -1,26 +1,5 @@
 name: Quota Monitor
 
-# Monitors GitHub core rate limit quota and optionally dispatches a target
-# workflow once quota recovers above a configurable threshold.
-#
-# Poll interval is recalculated on every iteration from the live reset epoch
-# returned by the API — so if the reset slides (because another workflow fires
-# and exhausts quota again), the sleep tightens or widens automatically.
-#
-# Two modes:
-#
-#   monitor-only  — poll and log quota state; exit 0 when quota recovers.
-#                   Useful for diagnosing quota exhaustion patterns.
-#
-#   wait-trigger  — same as above, but dispatch target_workflow when quota
-#                   recovers. Replaces the old quota-wait-trigger workflow.
-#
-# Schedule: every 30 minutes — catches a reset within the hour without
-# burning quota on scans when nothing is waiting. Can also be dispatched
-# manually for immediate monitoring.
-#
-# The runner timeout is 3h to cover the worst-case sliding reset window.
-
 on:
   schedule:
     - cron: '*/30 * * * *'
@@ -101,27 +80,26 @@ on:
 
 concurrency:
   group: quota-monitor
-  cancel-in-progress: true   # A newer run supersedes an in-flight monitor
+  cancel-in-progress: true
 
 permissions:
-  actions: write   # needed to dispatch the target workflow
+  actions: write
   contents: read
 
 jobs:
   monitor:
     runs-on: ubuntu-latest
-    timeout-minutes: 175   # 170m user timeout + 5m setup/teardown buffer
+    timeout-minutes: 175
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Monitor quota / watch run
         env:
-          GH_TOKEN:             ${{ secrets.SYNC_TOKEN }}
+          GH_TOKEN:             ${{ secrets.SYNC_TOKEN || '' }}
           GITHUB_OWNER:         Interested-Deving-1896
           GITHUB_REPO:          fork-sync-all
           MODE:                 ${{ inputs.mode || 'quota' }}
-          # quota mode
           TARGET_WORKFLOW:      ${{ inputs.target_workflow || '' }}
           TARGET_INPUTS:        ${{ inputs.target_inputs || '{}' }}
           TARGET_REF:           ${{ inputs.target_ref || 'main' }}
@@ -131,7 +109,6 @@ jobs:
           MAX_POLL_SEC:         "300"
           TIMEOUT_MIN:          ${{ inputs.timeout_min || '170' }}
           DRY_RUN:              ${{ inputs.dry_run || 'false' }}
-          # watch mode
           WATCH_WORKFLOW:       ${{ inputs.watch_workflow || '' }}
           WATCH_UNTIL:          ${{ inputs.watch_until || 'completed' }}
           WATCH_TIMEOUT_MIN:    ${{ inputs.watch_timeout_min || '60' }}
