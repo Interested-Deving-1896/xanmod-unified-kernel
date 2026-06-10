@@ -2,16 +2,16 @@
 # scripts/sync-all-features.sh — sync a repo's feature branch and its declared
 # upstream dependencies.
 #
-# This is the agnostic generalisation of sync-pieroproietti-forks.sh.
+# This is the agnostic generalisation of sync-Interested-Deving-1896-forks.sh.
 # Where that script syncs all GitHub forks of a single upstream owner,
 # this script syncs:
 #
 #   1. A named "core" fork (e.g. a penguins-eggs all-features branch) against
-#      its upstream (e.g. pieroproietti/penguins-eggs master).
+#      its upstream (e.g. Interested-Deving-1896/penguins-eggs master).
 #
 #   2. Every project declared in a registry file — handling both:
 #        a. GitHub forks  — repos GitHub knows are forks; synced via
-#                           merge-upstream (same as sync-pieroproietti-forks.sh)
+#                           merge-upstream (same as sync-Interested-Deving-1896-forks.sh)
 #        b. Explicit deps — repos that are NOT GitHub forks but declare an
 #                           upstream in the registry (e.g. imported repos,
 #                           repos created from scratch that track an upstream).
