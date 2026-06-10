@@ -1,7 +1,7 @@
 name: Sync Registry Sources
 
 # Registry-driven upstream sync — agnostic generalisation of
-# sync-pieroproietti-forks.yml.
+# sync-Interested-Deving-1896-forks.yml.
 #
 # Reads a registry JSON file that declares upstream sources for a set of
 # repos (GitHub forks or non-fork dependencies) and syncs each one via the
@@ -17,7 +17,7 @@ name: Sync Registry Sources
 
 on:
   schedule:
-    # 03:05 UTC daily — after sync-pieroproietti-forks (:05) and
+    # 03:05 UTC daily — after sync-Interested-Deving-1896-forks (:05) and
     # sync-upstream-sources (01:30) have already run.
     - cron: "5 3 * * *"
 
