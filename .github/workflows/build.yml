@@ -26,8 +26,8 @@ on:
       xanmod_branch:
         description: 'XanMod branch'
         required: false
-        default: 'main'
-
+        default: 'master'  # Changed from 'main' to 'master'
+        
 env:
   GITHUB_ORG: Interested-Deving-1896
 
@@ -61,7 +61,7 @@ jobs:
         env:
           DISTRO: ${{ matrix.distro }}
           ARCH: ${{ matrix.arch }}
-          XANMOD_BRANCH: ${{ inputs.xanmod_branch || 'main' }}
+          XANMOD_BRANCH: ${{ inputs.xanmod_branch || 'master' }}  # Changed from 'main' to 'master'
           SKIP_OCI: '1'
           SKIP_RELEASE: '1'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -94,7 +94,7 @@ jobs:
         env:
           DISTRO: ${{ inputs.distro }}
           ARCH: ${{ inputs.arch }}
-          XANMOD_BRANCH: ${{ inputs.xanmod_branch }}
+          XANMOD_BRANCH: ${{ inputs.xanmod_branch || 'master' }}  # Changed from 'main' to 'master'
           SKIP_OCI: '1'
           SKIP_RELEASE: '1'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
