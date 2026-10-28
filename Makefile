@@ -14,7 +14,7 @@ SHELL := /bin/bash
 # ── defaults ──────────────────────────────────────────────────────────────────
 DISTRO         ?= debian
 ARCH           ?= amd64
-XANMOD_BRANCH  ?= main
+XANMOD_BRANCH  ?= 6.19
 XANMOD_REPO    ?= https://gitlab.com/xanmod/linux.git
 XANMOD_REPO_FB ?= https://github.com/xanmod/linux.git
 
