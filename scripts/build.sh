@@ -25,7 +25,7 @@ source "${SCRIPT_DIR}/lib/detect.sh"
 # ── configuration ─────────────────────────────────────────────────────────────
 DISTRO="${DISTRO:-debian}"
 ARCH="${ARCH:-amd64}"
-XANMOD_BRANCH="${XANMOD_BRANCH:-main}"
+XANMOD_BRANCH="${XANMOD_BRANCH:-6.19}"
 XANMOD_REPO="${XANMOD_REPO:-https://gitlab.com/xanmod/linux.git}"
 XANMOD_REPO_FB="${XANMOD_REPO_FB:-https://github.com/xanmod/linux.git}"
 JOBS="${JOBS:-$(nproc)}"
