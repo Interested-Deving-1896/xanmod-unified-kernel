@@ -55,20 +55,22 @@ else
   log_info "Native build for ${ARCH} (KARCH=${KARCH})"
 fi
 
-# ── step 1: fetch base source tree ────────────────────────────────────────────
-log_step "1/6" "Fetching distro kernel base"
-if [[ "${SKIP_FETCH}" == "0" ]] || [[ ! -d "${SRC_DIR}" ]]; then
-  bash "${SCRIPT_DIR}/fetch-base.sh"
-else
-  log_info "Skipping fetch-base (SKIP_FETCH=1 and ${SRC_DIR} exists)"
-fi
-
-# ── step 2: fetch XanMod patches ─────────────────────────────────────────────
-log_step "2/6" "Fetching XanMod patch series (branch: ${XANMOD_BRANCH})"
+# ── step 1: fetch XanMod patches ─────────────────────────────────────────────
+# The patch fetch writes patches/VERSION, which the base fetch uses to select
+# the matching vanilla kernel tarball when no prepared base repository exists.
+log_step "1/6" "Fetching XanMod patch series (branch: ${XANMOD_BRANCH})"
 if [[ "${SKIP_FETCH}" == "0" ]] || [[ ! -d "${PATCHES_DIR}" ]]; then
   bash "${SCRIPT_DIR}/fetch-patches.sh"
 else
   log_info "Skipping fetch-patches (SKIP_FETCH=1 and ${PATCHES_DIR} exists)"
+fi
+
+# ── step 2: fetch base source tree ────────────────────────────────────────────
+log_step "2/6" "Fetching distro kernel base"
+if [[ "${SKIP_FETCH}" == "0" ]] || [[ ! -d "${SRC_DIR}" ]]; then
+  bash "${SCRIPT_DIR}/fetch-base.sh"
+else
+  log_info "Skipping fetch-base (SKIP_FETCH=1 and ${SRC_DIR} exists)"
 fi
 
 # ── step 3: apply patches ─────────────────────────────────────────────────────
