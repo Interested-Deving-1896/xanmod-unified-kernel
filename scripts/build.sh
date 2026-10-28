@@ -4,7 +4,7 @@
 # Environment variables (all optional, have defaults):
 #   DISTRO          target distro (debian|devuan|ubuntu)  default: debian
 #   ARCH            target arch                           default: amd64
-#   XANMOD_BRANCH   XanMod git branch                    default: main
+#   XANMOD_BRANCH   XanMod git branch                    default: 6.19
 #   XANMOD_REPO     primary XanMod git URL               default: gitlab.com/xanmod/linux.git
 #   XANMOD_REPO_FB  fallback XanMod git URL              default: github.com/xanmod/linux.git
 #   JOBS            parallel make jobs                   default: nproc
