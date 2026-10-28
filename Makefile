@@ -14,7 +14,7 @@ SHELL := /bin/bash
 # ── defaults ──────────────────────────────────────────────────────────────────
 DISTRO         ?= debian
 ARCH           ?= amd64
-XANMOD_BRANCH  ?= main
+XANMOD_BRANCH  ?= 6.19
 XANMOD_REPO    ?= https://gitlab.com/xanmod/linux.git
 XANMOD_REPO_FB ?= https://github.com/xanmod/linux.git
 
@@ -25,13 +25,15 @@ TIER3_ARCHES   := armel ppc64el mips64el loong64 i686
 ALL_ARCHES     := $(TIER1_ARCHES) $(TIER2_ARCHES) $(TIER3_ARCHES)
 DISTROS        := debian devuan ubuntu
 
-# ── paths ─────────────────────────────────────────────────────────────────────
+# ── paths ──────────────────────────────────────────────────────────────────────
 BUILD_DIR      := build
 CACHE_DIR      := .cache
 PATCHES_DIR    := patches
 OUTPUT_DIR     := output
+KERNEL_BUILD_DIR ?= $(CURDIR)/$(BUILD_DIR)/$(DISTRO)/$(ARCH)/src
+BDFS_ARTIFACT_DIR ?= $(CURDIR)/$(OUTPUT_DIR)/$(DISTRO)/$(ARCH)/bdfs
 
-# ── targets ───────────────────────────────────────────────────────────────────
+# ── targets ────────────────────────────────────────────────────────────────────
 
 .PHONY: build
 build: ## Build kernel .deb for DISTRO+ARCH (defaults: debian, amd64)
@@ -65,27 +67,27 @@ apply-patches: ## Apply XanMod patches to source tree
 bootstrap: ## Install build dependencies
 	@bash scripts/bootstrap.sh
 
-# ── btrfs-dwarfs-framework integration ───────────────────────────────────────
+# ── Btrfs-DwarFS Framework (BDFS) external-module integration ─────────────────
+# BDFS is an out-of-tree module. It is not injected into fs/ and does not add
+# CONFIG_BTRFS_DWARFS to the kernel's own Kconfig. See integrations/bdfs/README.md.
 BDFS_DIR ?= $(shell \
-    if [ -d "$(CURDIR)/../../btrfs-dwarfs-framework" ]; then \
+    if [ -f "$(CURDIR)/../../btrfs-dwarfs-framework/integrations/kernels/build-module.sh" ]; then \
         echo "$(CURDIR)/../../btrfs-dwarfs-framework"; \
-    elif [ -d "$(CURDIR)/../btrfs-dwarfs-framework" ]; then \
+    elif [ -f "$(CURDIR)/../btrfs-dwarfs-framework/integrations/kernels/build-module.sh" ]; then \
         echo "$(CURDIR)/../btrfs-dwarfs-framework"; \
     else echo ""; fi)
 
-.PHONY: bdfs-profile
-bdfs-profile: ## Build XanMod with btrfs_dwarfs module (secondary bdfs kernel)
-	@[ -n "$(BDFS_DIR)" ] || { echo "Set BDFS_DIR=/path/to/btrfs-dwarfs-framework"; exit 1; }
-	bash $(BDFS_DIR)/kernels/bdfs-kconfig/install-into-kernel.sh $(BUILD_DIR)
-	$(MAKE) EXTRA_CONFIG=integrations/bdfs/Kconfig.fragment
+.PHONY: bdfs-module
+bdfs-module: ## Build BDFS .ko against an already configured kernel tree (does not install/load)
+	@[ -n "$(BDFS_DIR)" ] || { echo "Set BDFS_DIR=/path/to/btrfs-dwarfs-framework (with the external-module helper available)"; exit 1; }
+	@[ -f "$(BDFS_DIR)/integrations/kernels/build-module.sh" ] || { echo "BDFS external-module helper not found. Use the BDFS integration branch containing integrations/kernels/build-module.sh."; exit 1; }
+	@[ -f "$(KERNEL_BUILD_DIR)/Makefile" ] && [ -f "$(KERNEL_BUILD_DIR)/.config" ] || { echo "Configured kernel tree not found at $(KERNEL_BUILD_DIR). Run the kernel build/configuration first, or set KERNEL_BUILD_DIR explicitly."; exit 1; }
+	bash "$(BDFS_DIR)/integrations/kernels/build-module.sh" "$(KERNEL_BUILD_DIR)" "$(BDFS_ARTIFACT_DIR)"
 
 .PHONY: bdfs-module-only
-bdfs-module-only: ## Build only btrfs_dwarfs.ko against existing source (fast)
-	@[ -n "$(BDFS_DIR)" ] || { echo "Set BDFS_DIR=/path/to/btrfs-dwarfs-framework"; exit 1; }
-	bash $(BDFS_DIR)/kernels/bdfs-kconfig/install-into-kernel.sh $(BUILD_DIR)
-	$(MAKE) -C $(BUILD_DIR) M=fs/btrfs_dwarfs modules -j$(JOBS)
-	@echo "Module: $(BUILD_DIR)/fs/btrfs_dwarfs/btrfs_dwarfs.ko"
+bdfs-module-only: bdfs-module ## Backwards-compatible alias for bdfs-module
 
+# ── clean ─────────────────────────────────────────────────────────────────────
 .PHONY: clean
 clean: ## Remove build artifacts (keeps .cache)
 	@rm -rf $(BUILD_DIR) $(OUTPUT_DIR) $(PATCHES_DIR)
@@ -94,7 +96,7 @@ clean: ## Remove build artifacts (keeps .cache)
 distclean: clean ## Remove build artifacts and patch cache
 	@rm -rf $(CACHE_DIR)
 
-# ── tier matrix targets ───────────────────────────────────────────────────────
+# ── tier matrix targets ────────────────────────────────────────────────────────
 
 .PHONY: all-tier1
 all-tier1: ## Build all Tier 1 arches (amd64, arm64) for all distros
@@ -131,4 +133,4 @@ all: all-tier1 all-tier2 all-tier3 ## Build all tiers
 .PHONY: help
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*##"; printf "Usage:\n  make \033[36m<target>\033[0m\n\nTargets:\n"} \
-	  /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)
+	  /^[a-zA-Z_-]+:.*##/ { printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2 }' $(MAKEFILE_LIST)

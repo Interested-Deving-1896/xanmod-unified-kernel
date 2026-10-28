@@ -75,7 +75,12 @@ fetch_vanilla_fallback() {
     KERNEL_VERSION="${KERNEL_VERSION:-6.12.0}"
   fi
 
-  local major_minor="${KERNEL_VERSION%.*}"
+  # Kernel.org uses vX.x/linux-X.Y.tar.xz for minor releases (6.19),
+  # not linux-X.Y.0.tar.xz when SUBLEVEL is zero.
+  if [[ "${KERNEL_VERSION}" =~ ^([0-9]+\.[0-9]+)\.0$ ]]; then
+    KERNEL_VERSION="${BASH_REMATCH[1]}"
+  fi
+
   local major="${KERNEL_VERSION%%.*}"
   local tarball_url="https://cdn.kernel.org/pub/linux/kernel/v${major}.x/linux-${KERNEL_VERSION}.tar.xz"
   local tarball_cache="${CACHE_DIR}/linux-${KERNEL_VERSION}.tar.xz"
