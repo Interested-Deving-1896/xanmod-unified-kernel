@@ -1,26 +1,9 @@
 # SPDX-License-Identifier: GPL-2.0-or-later
 #
-# Kconfig.fragment — btrfs_dwarfs support for XanMod Unified Kernel
+# DEPRECATED: this file is not a kernel Kconfig fragment.
 #
-# XanMod is a secondary/fallback kernel for btrfs-dwarfs-framework,
-# used when liqxanmod is unavailable or a pure XanMod build is preferred.
-#
-# Apply via: make bdfs-profile
-# Or manually:
-#   scripts/kconfig/merge_config.sh \
-#       config/<tier>.config \
-#       integrations/bdfs/Kconfig.fragment
-
-CONFIG_BTRFS_DWARFS=m
-CONFIG_BTRFS_DWARFS_NETLINK_EVENTS=y
-CONFIG_BTRFS_DWARFS_XATTR=y
-CONFIG_BTRFS_DWARFS_STATS=y
-# CONFIG_BTRFS_DWARFS_DEBUG is not set
-# CONFIG_BTRFS_DWARFS_GKI_COMPAT is not set
-# CONFIG_BTRFS_DWARFS_CHROMEOS_COMPAT is not set
-
-CONFIG_BTRFS_FS=y
-CONFIG_FUSE_FS=y
-CONFIG_CRYPTO_LZ4=y
-CONFIG_CRYPTO_ZSTD=y
-CONFIG_CRYPTO_LZO=y
+# BDFS currently builds as an out-of-tree module from
+# btrfs-dwarfs-framework/kernel/btrfs_dwarfs. Its CONFIG_BTRFS_DWARFS symbol is
+# defined by the BDFS module's own Kconfig, not by the XanMod kernel tree.
+# Do not merge this file into the kernel .config and do not inject BDFS into
+# fs/. Use the external-module helper documented in integrations/bdfs/README.md.

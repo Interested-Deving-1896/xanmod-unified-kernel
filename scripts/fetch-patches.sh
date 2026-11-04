@@ -15,7 +15,7 @@ REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 source "${SCRIPT_DIR}/lib/log.sh"
 
-XANMOD_BRANCH="${XANMOD_BRANCH:-main}"
+XANMOD_BRANCH="${XANMOD_BRANCH:-6.19}"
 XANMOD_REPO="${XANMOD_REPO:-https://gitlab.com/xanmod/linux.git}"
 XANMOD_REPO_FB="${XANMOD_REPO_FB:-https://github.com/xanmod/linux.git}"
 
