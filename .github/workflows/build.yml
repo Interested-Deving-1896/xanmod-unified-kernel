@@ -94,7 +94,7 @@ jobs:
         env:
           DISTRO: ${{ inputs.distro }}
           ARCH: ${{ inputs.arch }}
-          XANMOD_BRANCH: ${{ inputs.xanmod_branch || 'master' }}  # Changed from 'main' to 'master'
+          XANMOD_BRANCH: ${{ inputs.xanmod_branch || 'main' }}
           SKIP_OCI: '1'
           SKIP_RELEASE: '1'
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
