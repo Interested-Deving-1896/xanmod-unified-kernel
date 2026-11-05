@@ -77,8 +77,14 @@ fetch_vanilla_fallback() {
 
   local major_minor="${KERNEL_VERSION%.*}"
   local major="${KERNEL_VERSION%%.*}"
-  local tarball_url="https://cdn.kernel.org/pub/linux/kernel/v${major}.x/linux-${KERNEL_VERSION}.tar.xz"
-  local tarball_cache="${CACHE_DIR}/linux-${KERNEL_VERSION}.tar.xz"
+  # kernel.org names the initial .0 release by major.minor (for example,
+  # linux-6.12.tar.xz), while later stable point releases retain .N.
+  local tarball_version="${KERNEL_VERSION}"
+  if [[ "${KERNEL_VERSION}" == "${major_minor}.0" ]]; then
+    tarball_version="${major_minor}"
+  fi
+  local tarball_url="https://cdn.kernel.org/pub/linux/kernel/v${major}.x/linux-${tarball_version}.tar.xz"
+  local tarball_cache="${CACHE_DIR}/linux-${tarball_version}.tar.xz"
 
   log_info "Fetching vanilla kernel ${KERNEL_VERSION} from kernel.org"
 
