@@ -31,3 +31,13 @@ These are not interchangeable source trees. The adapter must identify which path
 - **Stage 3 — validation:** kernel config resolution, architecture/toolchain builds, module builds, package checks, and boot/runtime evidence where available.
 
 No kernel source, patch queue, configuration, or installation state is changed by this documentation.
+## KUMBE manifest v1.1 mapping
+
+Keep the following source inputs independent:
+
+- `kernel-source`: selected XanMod MAIN/EDGE/LTS/RT Git repository, exact ref, and full resolved commit.
+- `kernel-base`: distro/architecture base repository commit, or kernel.org archive version and SHA-256 digest.
+- `provider-patches`: XanMod patch-generation repository/ref/commit and generated queue identity.
+- `config-bundle`: independently sourced configuration fragments where applicable.
+
+If shallow history prevents proving the vanilla base tag or merge-base, mark the relevant provenance unavailable/unverified and block planning. Do not elevate the oldest shallow commit to a verified base. Only report `integrity: verified` when the producer has checked the identity against trusted evidence; the BDFS planner does not perform those checks itself.
